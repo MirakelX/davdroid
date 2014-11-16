@@ -664,6 +664,10 @@ public class LocalAddressBook extends LocalCollection<Contact> {
 		pendingOperations.add(ContentProviderOperation.newDelete(dataURI())
 				.withSelection(Data.RAW_CONTACT_ID + "=?",
 				new String[] { String.valueOf(resource.getLocalID()) }).build());
+		pendingOperations.add(ContentProviderOperation.newDelete(dataURI())
+                .withSelection(Data.MIMETYPE+"=? AND "+Data.CONTACT_ID+"=?",
+                        new String[]{GroupMembership.CONTENT_ITEM_TYPE,
+                                String.valueOf(resource.localID)}).build());
 	}
 
 
