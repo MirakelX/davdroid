@@ -58,10 +58,8 @@ import net.fortuna.ical4j.util.TimeZones;
 
 import org.apache.commons.lang.StringUtils;
 
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
@@ -540,7 +538,7 @@ public class LocalCalendar extends LocalCollection<Event> {
 	/* content builder methods */
 
 	@Override
-	protected Builder buildEntry(Builder builder, Resource resource) {
+	protected Builder buildEntry(Builder builder, Resource resource,boolean insert) {
 		Event event = (Event)resource;
 
 		builder = builder
@@ -660,7 +658,7 @@ public class LocalCalendar extends LocalCollection<Event> {
 
 
 	protected Builder buildException(Builder builder, Event master, Event exception) {
-		buildEntry(builder, exception);
+		buildEntry(builder, exception,false);
 		builder.withValue(Events.ORIGINAL_SYNC_ID, exception.getName());
 
 		// Some servers (iCloud, for instance) return RECURRENCE-ID with DATE-TIME even if

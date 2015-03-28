@@ -28,7 +28,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.cert.CertPathValidatorException;
 
-import at.bitfire.davdroid.R;
+import at.bitfire.davdroid.mirakel.R;
 import at.bitfire.davdroid.resource.DavResourceFinder;
 import at.bitfire.davdroid.resource.ServerInfo;
 import at.bitfire.davdroid.webdav.DavException;

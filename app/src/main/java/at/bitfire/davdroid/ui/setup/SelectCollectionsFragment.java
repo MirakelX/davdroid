@@ -20,7 +20,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
-import at.bitfire.davdroid.R;
+import at.bitfire.davdroid.mirakel.R;
 import at.bitfire.davdroid.resource.ServerInfo;
 
 public class SelectCollectionsFragment extends ListFragment {
@@ -87,6 +87,8 @@ public class SelectCollectionsFragment extends ListFragment {
 				addressBook.setEnabled(false);
 			for (ServerInfo.ResourceInfo calendar : serverInfo.getCalendars())
 				calendar.setEnabled(false);
+            for (ServerInfo.ResourceInfo todoList : serverInfo.getTodoLists())
+                todoList.setEnabled(false);
 			
 			ListAdapter adapter = getListView().getAdapter();
 			for (long id : getListView().getCheckedItemIds()) {

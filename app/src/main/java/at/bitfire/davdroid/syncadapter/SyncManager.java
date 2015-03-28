@@ -45,10 +45,9 @@ public class SyncManager {
 	
 	public void synchronize(boolean manualSync, SyncResult syncResult) throws URISyntaxException, LocalStorageException, IOException, HttpException, DavException {
 		// PHASE 1: push local changes to server
-		int	deletedRemotely = pushDeleted(),
-			addedRemotely = pushNew(),
-			updatedRemotely = pushDirty();
-		
+		int	deletedRemotely = pushDeleted();
+		int	addedRemotely = pushNew();
+		int updatedRemotely = pushDirty();
 		syncResult.stats.numEntries = deletedRemotely + addedRemotely + updatedRemotely;
 		
 		// PHASE 2A: check if there's a reason to do a sync with remote (= forced sync or remote CTag changed)
@@ -72,8 +71,8 @@ public class SyncManager {
 		
 		// PHASE 2B: detect details of remote changes
 		Log.i(TAG, "Fetching remote resource list");
-		Set<Resource>	remotelyAdded = new HashSet<Resource>(),
-						remotelyUpdated = new HashSet<Resource>();
+		Set<Resource>	remotelyAdded = new HashSet<Resource>();
+		Set<Resource>	remotelyUpdated = new HashSet<Resource>();
 		
 		Resource[] remoteResources = remote.getMemberETags();
 		for (Resource remoteResource : remoteResources) {
@@ -98,6 +97,7 @@ public class SyncManager {
 		// update collection CTag
 		Log.i(TAG, "Sync complete, fetching new CTag");
 		local.setCTag(remote.getCTag());
+		local.commit();
 	}
 	
 	

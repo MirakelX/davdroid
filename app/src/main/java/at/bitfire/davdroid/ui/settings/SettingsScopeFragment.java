@@ -19,7 +19,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import at.bitfire.davdroid.Constants;
-import at.bitfire.davdroid.R;
+import at.bitfire.davdroid.mirakel.R;
 
 public class SettingsScopeFragment extends ListFragment {
 	Account[] accounts;

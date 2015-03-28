@@ -75,6 +75,8 @@ import lombok.Setter;
 public class Event extends Resource {
 	private final static String TAG = "davdroid.Event";
 	
+	public final static String MIME_TYPE = "text/calendar";
+	
 	private final static TimeZoneRegistry tzRegistry = new DefaultTimeZoneRegistryFactory().createRegistry();
 
 	@Getter @Setter protected RecurrenceId recurrenceId;
@@ -145,6 +147,7 @@ public class Event extends Resource {
 			throw new InvalidResourceException(e);
 		}
 		
+		// event
 		ComponentList events = ical.getComponents(Component.VEVENT);
 		if (events == null || events.isEmpty())
 			throw new InvalidResourceException("No VEVENT found");

@@ -25,7 +25,6 @@ import org.apache.http.client.methods.HttpGetHC4;
 import org.apache.http.client.methods.HttpOptionsHC4;
 import org.apache.http.client.methods.HttpPutHC4;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.client.utils.URIUtilsHC4;
 import org.apache.http.entity.ByteArrayEntityHC4;
 import org.apache.http.impl.auth.BasicSchemeHC4;
 import org.apache.http.impl.client.BasicAuthCache;
@@ -49,7 +48,7 @@ import java.util.List;
 import java.util.Set;
 
 import at.bitfire.davdroid.URIUtils;
-import at.bitfire.davdroid.resource.Event;
+import at.bitfire.davdroid.resource.TimeZoneHelper;
 import at.bitfire.davdroid.webdav.DavProp.Comp;
 import ezvcard.VCardVersion;
 import lombok.Cleanup;
@@ -294,19 +293,20 @@ public class WebDavResource {
 		// so we have to handle redirections manually and create a new request for the new location
 		for (int i = context.getRequestConfig().getMaxRedirects(); i > 0; i--) {
 			// build multi-get XML request 
-			List<String> hrefs = new LinkedList<String>();
-			for (String name : names)
+			final List<String> hrefs = new LinkedList<String>();
+			for (final String name : names){
 				// name may contain "%" which have to be encoded → use non-quoting URI constructor and getRawPath()
 				// name may also contain ":", so prepend "./" because even the non-quoting URI constructor parses after constructing
 				// DAVdroid ensures that collections always have a trailing slash, so "./" won't go down in directory hierarchy
 				hrefs.add(location.resolve(new URI(null, null, "./" + name, null)).getRawPath());
-			DavMultiget multiget = DavMultiget.newRequest(type, hrefs.toArray(new String[0]));
+			}
+			final DavMultiget multiget = DavMultiget.newRequest(type, hrefs.toArray(new String[0]));
 			
-			StringWriter writer = new StringWriter();
+			final StringWriter writer = new StringWriter();
 			try {
-				Serializer serializer = new Persister();
+				final Serializer serializer = new Persister();
 				serializer.write(multiget, writer);
-			} catch (Exception ex) {
+			} catch (final Exception ex) {
 				Log.e(TAG, "Couldn't create XML multi-get request", ex);
 				throw new DavException("Couldn't create multi-get request");
 			}
@@ -534,12 +534,13 @@ public class WebDavResource {
 						
 						if (prop.calendarTimezone != null)
 							try {
-								properties.put(Property.TIMEZONE, Event.TimezoneDefToTzId(prop.calendarTimezone.getTimezone()));
-							} catch(IllegalArgumentException e) {
+								properties.put(Property.TIMEZONE, TimeZoneHelper.TimezoneDefToTzId(prop.calendarTimezone.getTimezone()));
+							} catch(final IllegalArgumentException e) {
+								Log.v(TAG,"could not parse timezone",e);
 							}
 						
 						if (prop.supportedCalendarComponentSet != null) {
-							supportedComponents = new LinkedList<String>();
+							supportedComponents = new LinkedList<>();
 							for (Comp component : prop.supportedCalendarComponentSet)
 								supportedComponents.add(component.getName());
 						}

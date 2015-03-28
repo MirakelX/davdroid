@@ -32,7 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import at.bitfire.davdroid.R;
+import at.bitfire.davdroid.mirakel.R;
 
 public class LoginURLFragment extends Fragment implements TextWatcher {
 	

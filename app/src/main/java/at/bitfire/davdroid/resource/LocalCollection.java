@@ -13,6 +13,7 @@ import android.content.ContentProviderOperation;
 import android.content.ContentProviderOperation.Builder;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.net.Uri;
@@ -32,7 +33,7 @@ import lombok.Cleanup;
  * @param <T> Subtype of Resource that can be stored in the collection 
  */
 public abstract class LocalCollection<T extends Resource> {
-	private static final String TAG = "davdroid.Collection";
+	private static final String TAG = "davdroid.LocalCollection";
 	
 	protected Account account;
 	protected ContentProviderClient providerClient;
@@ -43,7 +44,7 @@ public abstract class LocalCollection<T extends Resource> {
 	
 	/** base Uri of the collection's entries (for instance, Events.CONTENT_URI);
 	 *  apply syncAdapterURI() before returning a value */
-	abstract protected Uri entriesURI();
+	abstract protected Uri entriesURI() throws RecordNotFoundException;
 
 	/** column name of the type of the account the entry belongs to */
 	abstract protected String entryColumnAccountType();
@@ -71,7 +72,7 @@ public abstract class LocalCollection<T extends Resource> {
 	String sqlFilter;
 	
 
-	LocalCollection(Account account, ContentProviderClient providerClient) {
+	protected LocalCollection(Account account, ContentProviderClient providerClient) {
 		this.account = account;
 		this.providerClient = providerClient;
 	}
@@ -260,14 +261,19 @@ public abstract class LocalCollection<T extends Resource> {
 	abstract public T newResource(long localID, String resourceName, String eTag);
 	
 	/** Enqueues adding the resource (including all data) to the local collection. Requires commit(). */
-	public void add(Resource resource) {
-		int idx = pendingOperations.size();
-		pendingOperations.add(
-				buildEntry(ContentProviderOperation.newInsert(entriesURI()), resource)
-				.withYieldAllowed(true)
-				.build());
-		
-		addDataRows(resource, -1, idx);
+	public void add(final Resource resource) {
+		try {
+			final int idx = pendingOperations.size();
+			pendingOperations.add(
+                    buildEntry(ContentProviderOperation.newInsert(entriesURI()), resource,true)
+                    .withYieldAllowed(true)
+		                    .build());
+			addDataRows(resource, -1L, idx);
+		} catch (final RecordNotFoundException e) {
+			Log.wtf(TAG,"Failed to add element",e);
+		}
+
+
 	}
 	
 	/** Enqueues updating an existing resource in the local collection. The resource will be found by 
@@ -275,7 +281,7 @@ public abstract class LocalCollection<T extends Resource> {
 	public void updateByRemoteName(Resource remoteResource) throws LocalStorageException {
 		T localResource = findByRemoteName(remoteResource.getName(), false);
 		pendingOperations.add(
-				buildEntry(ContentProviderOperation.newUpdate(ContentUris.withAppendedId(entriesURI(), localResource.getLocalID())), remoteResource)
+				buildEntry(ContentProviderOperation.newUpdate(ContentUris.withAppendedId(entriesURI(), localResource.getLocalID())), remoteResource,false)
 				.withValue(entryColumnETag(), remoteResource.getETag())
 				.withYieldAllowed(true)
 				.build());
@@ -285,11 +291,15 @@ public abstract class LocalCollection<T extends Resource> {
 	}
 
 	/** Enqueues deleting a resource from the local collection. Requires commit(). */
-	public void delete(Resource resource) {
-		pendingOperations.add(ContentProviderOperation
-				.newDelete(ContentUris.withAppendedId(entriesURI(), resource.getLocalID()))
-				.withYieldAllowed(true)
-				.build());
+	public void delete(final Resource resource) {
+		try {
+			pendingOperations.add(ContentProviderOperation
+                    .newDelete(ContentUris.withAppendedId(entriesURI(), resource.getLocalID()))
+                    .withYieldAllowed(true)
+                    .build());
+		} catch (final RecordNotFoundException e) {
+			Log.wtf(TAG,"Failed to delete resource",e);
+		}
 	}
 
 	/**
@@ -306,17 +316,21 @@ public abstract class LocalCollection<T extends Resource> {
 		values.put(entryColumnETag(), eTag);
 		try {
 			providerClient.update(ContentUris.withAppendedId(entriesURI(), res.getLocalID()), values, null, new String[] {});
-		} catch (RemoteException e) {
+		} catch (final RemoteException e) {
 			throw new LocalStorageException(e);
 		}
 	}
 	
 	/** Enqueues removing the dirty flag from a locally-stored resource. Requires commit(). */
-	public void clearDirty(Resource resource) {
-		pendingOperations.add(ContentProviderOperation
-				.newUpdate(ContentUris.withAppendedId(entriesURI(), resource.getLocalID()))
-				.withValue(entryColumnDirty(), 0)
-				.build());
+	public void clearDirty(final Resource resource) {
+		try {
+			pendingOperations.add(ContentProviderOperation
+                    .newUpdate(ContentUris.withAppendedId(entriesURI(), resource.getLocalID()))
+                    .withValue(entryColumnDirty(), 0)
+                    .build());
+		} catch (final RecordNotFoundException e) {
+			Log.wtf(TAG,"Failed to clear dirty",e);
+		}
 	}
 
 	/** Commits enqueued operations to the content provider (for batch operations). */
@@ -326,9 +340,7 @@ public abstract class LocalCollection<T extends Resource> {
 				Log.d(TAG, "Committing " + pendingOperations.size() + " operations");
 				providerClient.applyBatch(pendingOperations);
 				pendingOperations.clear();
-			} catch (RemoteException ex) {
-				throw new LocalStorageException(ex);
-			} catch(OperationApplicationException ex) {
+			} catch (final RemoteException | OperationApplicationException ex) {
 				throw new LocalStorageException(ex);
 			}
 	}
@@ -350,7 +362,7 @@ public abstract class LocalCollection<T extends Resource> {
 				.build();
 	}
 	
-	protected Builder newDataInsertBuilder(Uri dataUri, String refFieldName, long raw_ref_id, int backrefIdx) {
+	protected Builder newDataInsertBuilder(Uri dataUri, String refFieldName, long raw_ref_id, Integer backrefIdx) {
 		Builder builder = ContentProviderOperation.newInsert(syncAdapterURI(dataUri));
 		if (backrefIdx != -1)
 			return builder.withValueBackReference(refFieldName, backrefIdx);
@@ -367,11 +379,11 @@ public abstract class LocalCollection<T extends Resource> {
 	 * 
 	 * @param builder Builder to be extended by all resource data that can be stored without extra data rows.
 	 */
-	protected abstract Builder buildEntry(Builder builder, Resource resource);
+	protected abstract Builder buildEntry(Builder builder, Resource resource,boolean insert);
 	
 	/** Enqueues adding extra data rows of the resource to the local collection. */
 	protected abstract void addDataRows(Resource resource, long localID, int backrefIdx);
 	
 	/** Enqueues removing all extra data rows of the resource from the local collection. */
-	protected abstract void removeDataRows(Resource resource);
+	protected abstract void removeDataRows(Resource resource) throws LocalStorageException;
 }

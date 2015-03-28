@@ -16,7 +16,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ListView;
 
-import at.bitfire.davdroid.R;
+import at.bitfire.davdroid.mirakel.R;
 
 public class SettingsActivity extends Activity {
 	private final static String KEY_SELECTED_ACCOUNT = "selected_account";

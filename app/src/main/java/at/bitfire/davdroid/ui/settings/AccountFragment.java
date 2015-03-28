@@ -18,7 +18,7 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.SwitchPreference;
 
-import at.bitfire.davdroid.R;
+import at.bitfire.davdroid.mirakel.R;
 import at.bitfire.davdroid.syncadapter.AccountSettings;
 import ezvcard.VCardVersion;
 import lombok.Setter;

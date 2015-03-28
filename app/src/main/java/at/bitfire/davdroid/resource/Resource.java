@@ -30,12 +30,13 @@ public abstract class Resource {
 	@Getter @Setter protected String uid;
 	@Getter protected long localID;
 
-	public Resource(String name, String ETag) {
+	
+	public Resource(final String name, final String ETag) {
 		this.name = name;
 		this.ETag = ETag;
 	}
 	
-	public Resource(long localID, String name, String ETag) {
+	public Resource(final long localID, final String name, final String ETag) {
 		this(name, ETag);
 		this.localID = localID;
 	}

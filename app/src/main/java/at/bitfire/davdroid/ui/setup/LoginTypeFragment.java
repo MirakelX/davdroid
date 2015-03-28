@@ -17,7 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioButton;
 
-import at.bitfire.davdroid.R;
+import at.bitfire.davdroid.mirakel.R;
 
 public class LoginTypeFragment extends Fragment {
 	
