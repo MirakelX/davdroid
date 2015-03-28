@@ -11,6 +11,7 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Fragment;
 import android.content.ContentResolver;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.CalendarContract;
 import android.provider.ContactsContract;
@@ -26,15 +27,21 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.dmfs.provider.tasks.TaskContract;
+
+import java.util.List;
+
 import at.bitfire.davdroid.Constants;
-import at.bitfire.davdroid.R;
+import at.bitfire.davdroid.mirakel.R;
 import at.bitfire.davdroid.resource.LocalCalendar;
 import at.bitfire.davdroid.resource.LocalStorageException;
 import at.bitfire.davdroid.resource.ServerInfo;
+import at.bitfire.davdroid.resource.mirakel.LocalTodoList;
 import at.bitfire.davdroid.syncadapter.AccountSettings;
 
 public class AccountDetailsFragment extends Fragment implements TextWatcher {
 	public static final String KEY_SERVER_INFO = "server_info";
+	private static final String TAG="AccountDetailsFragment";
 	
 	ServerInfo serverInfo;
 	
@@ -115,9 +122,29 @@ public class AccountDetailsFragment extends Fragment implements TextWatcher {
 			if (syncCalendars) {
 				ContentResolver.setIsSyncable(account, CalendarContract.AUTHORITY, 1);
 				ContentResolver.setSyncAutomatically(account, CalendarContract.AUTHORITY, true);
-			} else
+			} else {
 				ContentResolver.setIsSyncable(account, CalendarContract.AUTHORITY, 0);
-			
+			}
+			            boolean syncTasks = false;
+            for (ServerInfo.ResourceInfo todoList : serverInfo.getTodoLists()){
+                if (todoList.isEnabled()) {
+                    try {
+                        LocalTodoList.create(account, getActivity().getContentResolver(), todoList, getActivity());
+                        syncTasks = true;
+                    } catch (LocalStorageException e) {
+                        Toast.makeText(getActivity(), "Couldn't create todoList(s): " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+			final List<Uri> taskproviders = LocalTodoList.todoURI(getActivity(), account, TaskContract.Tasks.CONTENT_URI_PATH);
+            if(taskproviders.isEmpty()) {
+                Toast.makeText(getActivity(),"No taskprovider found, please install Mirakel",Toast.LENGTH_LONG).show();
+            }else if(syncTasks){
+	            ContentResolver.setIsSyncable(account, taskproviders.get(0).getAuthority(), 1);
+	            ContentResolver.setSyncAutomatically(account, taskproviders.get(0).getAuthority(), true);
+            }else{
+	            ContentResolver.setIsSyncable(account, taskproviders.get(0).getAuthority(), 0);
+            }
 			getActivity().finish();				
 		} else
 			Toast.makeText(getActivity(), "Couldn't create account (account with this name already existing?)", Toast.LENGTH_LONG).show();

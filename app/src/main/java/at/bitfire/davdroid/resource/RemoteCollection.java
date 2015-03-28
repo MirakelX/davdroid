@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import at.bitfire.davdroid.URIUtils;
+import at.bitfire.davdroid.resource.mirakel.ToDo;
 import at.bitfire.davdroid.webdav.DavException;
 import at.bitfire.davdroid.webdav.DavMultiget;
 import at.bitfire.davdroid.webdav.DavNoContentException;
@@ -69,7 +70,9 @@ public abstract class RemoteCollection<T extends Resource> {
 	public String getCTag() throws URISyntaxException, IOException, HttpException {
 		try {
 			if (collection.getCTag() == null && collection.getMembers() == null)    // not already fetched
+			{
 				collection.propfind(HttpPropfind.Mode.COLLECTION_CTAG);
+			}
 		} catch (DavException e) {
 			return null;
 		}
@@ -81,8 +84,9 @@ public abstract class RemoteCollection<T extends Resource> {
 
 		List<T> resources = new LinkedList<T>();
 		if (collection.getMembers() != null) {
-			for (WebDavResource member : collection.getMembers())
+			for (WebDavResource member : collection.getMembers()) {
 				resources.add(newResourceSkeleton(member.getName(), member.getETag()));
+			}
 		}
 		return resources.toArray(new Resource[0]);
 	}
@@ -90,29 +94,33 @@ public abstract class RemoteCollection<T extends Resource> {
 	@SuppressWarnings("unchecked")
 	public Resource[] multiGet(Resource[] resources) throws URISyntaxException, IOException, DavException, HttpException {
 		try {
-			if (resources.length == 1)
-				return (T[]) new Resource[]{get(resources[0])};
+			if (resources.length == 1) {
+				return new Resource[]{get(resources[0])};
+			}
 
 			Log.i(TAG, "Multi-getting " + resources.length + " remote resource(s)");
 
-			LinkedList<String> names = new LinkedList<String>();
-			for (Resource resource : resources)
+			final LinkedList<String> names = new LinkedList<>();
+			for (final Resource resource : resources) {
 				names.add(resource.getName());
+			}
 
-			LinkedList<T> foundResources = new LinkedList<T>();
-			collection.multiGet(multiGetType(), names.toArray(new String[0]));
-			if (collection.getMembers() == null)
+			final LinkedList<T> foundResources = new LinkedList<>();
+			collection.multiGet(multiGetType(), names.toArray(new String[names.size()]));
+			if (collection.getMembers() == null) {
 				throw new DavNoContentException();
+			}
 
-			for (WebDavResource member : collection.getMembers()) {
-				T resource = newResourceSkeleton(member.getName(), member.getETag());
+			for (final WebDavResource member : collection.getMembers()) {
+				final T resource = newResourceSkeleton(member.getName(), member.getETag());
 				try {
 					if (member.getContent() != null) {
 						@Cleanup InputStream is = new ByteArrayInputStream(member.getContent());
 						resource.parseEntity(is, getDownloader());
 						foundResources.add(resource);
-					} else
+					} else {
 						Log.e(TAG, "Ignoring entity without content");
+					}
 				} catch (InvalidResourceException e) {
 					Log.e(TAG, "Ignoring unparseable entity in multi-response", e);
 				}
@@ -132,11 +140,13 @@ public abstract class RemoteCollection<T extends Resource> {
 	public Resource get(Resource resource) throws URISyntaxException, IOException, HttpException, DavException, InvalidResourceException {
 		WebDavResource member = new WebDavResource(collection, resource.getName());
 
-		if (resource instanceof Contact)
+		if (resource instanceof Contact) {
 			member.get(Contact.MIME_TYPE);
-		else if (resource instanceof Event)
+		} else if (resource instanceof Event) {
 			member.get(Event.MIME_TYPE);
-		else {
+		} else if(resource instanceof ToDo) {
+			member.get(ToDo.MIME_TYPE);
+		}else{
 			Log.wtf(TAG, "Should fetch something, but neither contact nor calendar");
 			throw new InvalidResourceException("Didn't now which MIME type to accept");
 		}

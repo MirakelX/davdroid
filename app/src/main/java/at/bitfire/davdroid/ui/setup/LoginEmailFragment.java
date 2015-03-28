@@ -24,7 +24,7 @@ import android.widget.EditText;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import at.bitfire.davdroid.R;
+import at.bitfire.davdroid.mirakel.R;
 
 public class LoginEmailFragment extends Fragment implements TextWatcher {
 	

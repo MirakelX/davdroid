@@ -35,7 +35,8 @@ public class ServerInfo implements Serializable {
 	private boolean calDAV = false, cardDAV = false;
 	private List<ResourceInfo>
 		addressBooks = new LinkedList<ResourceInfo>(),
-		calendars  = new LinkedList<ResourceInfo>();
+		calendars  = new LinkedList<ResourceInfo>(),
+		todoLists  = new LinkedList<ResourceInfo>();
 	
 	
 	public boolean hasEnabledCalendars() {
@@ -53,18 +54,15 @@ public class ServerInfo implements Serializable {
 		
 		public enum Type {
 			ADDRESS_BOOK,
-			CALENDAR
+			CALENDAR,
+			TODO_LIST
 		}
 		
 		boolean enabled = false;
 		
 		final Type type;
 		final boolean readOnly;
-
-		final String URL,       // absolute URL of resource
-			  title,
-			  description,
-			  color;
+		final String URL, title, description, color;
 
 		VCardVersion vCardVersion;
 

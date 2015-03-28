@@ -14,7 +14,7 @@ import android.app.FragmentManager;
 import android.os.Bundle;
 import android.util.Log;
 
-import at.bitfire.davdroid.R;
+import at.bitfire.davdroid.mirakel.R;
 
 public class AccountActivity extends Activity {
 	public static final String EXTRA_ACCOUNT = "account";

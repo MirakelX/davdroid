@@ -16,7 +16,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import at.bitfire.davdroid.Constants;
-import at.bitfire.davdroid.R;
+import at.bitfire.davdroid.mirakel.R;
 
 public class AddAccountActivity extends Activity {
 

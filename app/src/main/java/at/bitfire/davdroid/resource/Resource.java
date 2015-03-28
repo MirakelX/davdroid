@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 
 import at.bitfire.davdroid.webdav.DavException;
 import at.bitfire.davdroid.webdav.HttpException;
@@ -31,12 +30,12 @@ public abstract class Resource {
 	@Getter protected long localID;
 
 	
-	public Resource(String name, String ETag) {
+	public Resource(final String name, final String ETag) {
 		this.name = name;
 		this.ETag = ETag;
 	}
 	
-	public Resource(long localID, String name, String ETag) {
+	public Resource(final long localID, final String name, final String ETag) {
 		this(name, ETag);
 		this.localID = localID;
 	}

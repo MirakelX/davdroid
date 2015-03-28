@@ -163,15 +163,15 @@ public class Event extends Resource {
 		if ((dtStart = event.getStartDate()) == null || (dtEnd = event.getEndDate()) == null)
 			throw new InvalidResourceException("Invalid start time/end time/duration");
 
-		if (hasTime(dtStart)) {
-			validateTimeZone(dtStart);
-			validateTimeZone(dtEnd);
+		if (TimeZoneHelper.hasTime(dtStart)) {
+			TimeZoneHelper.validateTimeZone(dtStart);
+			TimeZoneHelper.validateTimeZone(dtEnd);
 		}
 		
 		// all-day events and "events on that day":
 		// * related UNIX times must be in UTC
 		// * must have a duration (set to one day if missing)
-		if (!hasTime(dtStart) && !dtEnd.getDate().after(dtStart.getDate())) {
+		if (!TimeZoneHelper.hasTime(dtStart) && !dtEnd.getDate().after(dtStart.getDate())) {
 			Log.i(TAG, "Repairing iCal: DTEND := DTSTART+1");
 			Calendar c = Calendar.getInstance(TimeZone.getTimeZone(Time.TIMEZONE_UTC));
 			c.setTime(dtStart.getDate());
@@ -214,7 +214,7 @@ public class Event extends Resource {
 	public ByteArrayOutputStream toEntity() throws IOException {
 		net.fortuna.ical4j.model.Calendar ical = new net.fortuna.ical4j.model.Calendar();
 		ical.getProperties().add(Version.VERSION_2_0);
-		ical.getProperties().add(new ProdId("-//bitfire web engineering//DAVdroid " + Constants.APP_VERSION + " (ical4j 1.0.x)//EN"));
+		ical.getProperties().add(Constants.PRODUCT_ID);
 		
 		VEvent event = new VEvent();
 		PropertyList props = event.getProperties();
@@ -286,7 +286,7 @@ public class Event extends Resource {
 	}
 	
 	public String getDtStartTzID() {
-		return getTzId(dtStart);
+		return TimeZoneHelper.getTzId(dtStart);
 	}
 	
 	public void setDtStart(long tsStart, String tzID) {
@@ -294,7 +294,7 @@ public class Event extends Resource {
 			dtStart = new DtStart(new Date(tsStart));
 		} else {
 			DateTime start = new DateTime(tsStart);
-			start.setTimeZone(tzRegistry.getTimeZone(tzID));
+			start.setTimeZone(TimeZoneHelper.getTimeZone(tzID));
 			dtStart = new DtStart(start);
 		}
 	}
@@ -305,15 +305,15 @@ public class Event extends Resource {
 	}
 	
 	public String getDtEndTzID() {
-		return getTzId(dtEnd);
+		return TimeZoneHelper.getTzId(dtEnd);
 	}
 	
-	public void setDtEnd(long tsEnd, String tzID) {
+	public void setDtEnd(final long tsEnd, final String tzID) {
 		if (tzID == null) { 	// all-day
 			dtEnd = new DtEnd(new Date(tsEnd));
 		} else {
 			DateTime end = new DateTime(tsEnd);
-			end.setTimeZone(tzRegistry.getTimeZone(tzID));
+			end.setTimeZone(TimeZoneHelper.getTimeZone(tzID));
 			dtEnd = new DtEnd(end);
 		}
 	}
@@ -322,75 +322,8 @@ public class Event extends Resource {
 	// helpers
 	
 	public boolean isAllDay() {
-		return !hasTime(dtStart);
+		return !TimeZoneHelper.hasTime(dtStart);
 	}
 
-	protected static boolean hasTime(DateProperty date) {
-		return date.getDate() instanceof DateTime;
-	}
 
-	protected static String getTzId(DateProperty date) {
-		if (date.isUtc() || !hasTime(date))
-			return Time.TIMEZONE_UTC;
-		else if (date.getTimeZone() != null)
-			return date.getTimeZone().getID();
-		else if (date.getParameter(Value.TZID) != null)
-			return date.getParameter(Value.TZID).getValue();
-		
-		// fallback
-		return Time.TIMEZONE_UTC;
-	}
-
-	/* guess matching Android timezone ID */
-	protected static void validateTimeZone(DateProperty date) {
-        if (date.isUtc() || !hasTime(date))
-            return;
-
-        String tzID = getTzId(date);
-        if (tzID == null)
-            return;
-
-        String localTZ = null;
-		String availableTZs[] = SimpleTimeZone.getAvailableIDs();
-
-        // first, try to find an exact match (case insensitive)
-        for (String availableTZ : availableTZs)
-            if (tzID.equalsIgnoreCase(availableTZ)) {
-                localTZ = availableTZ;
-                break;
-            }
-
-		// if that doesn't work, try to find something else that matches
-        if (localTZ == null) {
-	        Log.w(TAG, "Coulnd't find time zone with matching identifiers, trying to guess");
-	        for (String availableTZ : availableTZs)
-		        if (StringUtils.indexOfIgnoreCase(tzID, availableTZ) != -1) {
-			        localTZ = availableTZ;
-			        break;
-		        }
-        }
-
-		// if that doesn't work, use UTC as fallback
-		if (localTZ == null) {
-			Log.e(TAG, "Couldn't identify time zone, using UTC as fallback");
-			localTZ = Time.TIMEZONE_UTC;
-		}
-
-        Log.d(TAG, "Assuming time zone " + localTZ + " for " + tzID);
-        date.setTimeZone(tzRegistry.getTimeZone(localTZ));
-    }
-
-	public static String TimezoneDefToTzId(String timezoneDef) throws IllegalArgumentException {
-		try {
-			if (timezoneDef != null) {
-				CalendarBuilder builder = new CalendarBuilder();
-				net.fortuna.ical4j.model.Calendar cal = builder.build(new StringReader(timezoneDef));
-				VTimeZone timezone = (VTimeZone)cal.getComponent(VTimeZone.VTIMEZONE);
-				return timezone.getTimeZoneId().getValue();
-			}
-		} catch (Exception ex) {
-			Log.w(TAG, "Can't understand time zone definition, ignoring", ex);
-		}
-		throw new IllegalArgumentException();
-	}
 }

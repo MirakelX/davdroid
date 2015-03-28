@@ -51,10 +51,8 @@ import net.fortuna.ical4j.model.property.Status;
 
 import org.apache.commons.lang.StringUtils;
 
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
@@ -443,7 +441,7 @@ public class LocalCalendar extends LocalCollection<Event> {
 	/* content builder methods */
 
 	@Override
-	protected Builder buildEntry(Builder builder, Resource resource) {
+	protected Builder buildEntry(Builder builder, Resource resource,boolean insert) {
 		Event event = (Event)resource;
 
 		builder = builder

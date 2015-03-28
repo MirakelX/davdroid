@@ -66,8 +66,7 @@
             android:imeOptions="actionNext"
             android:layout_width="0dp"
             android:scrollHorizontally="true"
-            android:scrollbars="horizontal"
-            android:text="" />
+            android:scrollbars="horizontal"/>
 
         <TextView
             android:textAppearance="?android:attr/textAppearanceMedium"
@@ -80,8 +79,7 @@
             android:imeOptions="actionGo"
             android:layout_width="0dp"
             android:scrollHorizontally="true"
-            android:scrollbars="horizontal"
-            android:text="" />
+            android:scrollbars="horizontal"/>
         
         <CheckBox
             android:id="@+id/auth_preemptive"
