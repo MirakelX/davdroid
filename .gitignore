@@ -85,8 +85,11 @@ build/
 # Ignore Gradle GUI config
 gradle-app.setting
 .gradletasknamecache
+
+### Keystores ###
 app/debug.keystore
 app/keystore.properties
+app/keystore
 
 ### external libs ###
 .svn
