@@ -87,3 +87,4 @@ gradle-app.setting
 .gradletasknamecache
 app/debug.keystore
 app/keystore.properties
+app/keystore
