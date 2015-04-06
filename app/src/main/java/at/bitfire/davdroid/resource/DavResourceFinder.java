@@ -34,7 +34,6 @@ import at.bitfire.davdroid.webdav.DavIncapableException;
 import at.bitfire.davdroid.webdav.HttpPropfind.Mode;
 import at.bitfire.davdroid.webdav.NotAuthorizedException;
 import at.bitfire.davdroid.webdav.WebDavResource;
-import ezvcard.VCardVersion;
 
 public class DavResourceFinder implements Closeable {
 	private final static String TAG = "davdroid.ResourceFinder";
@@ -77,19 +76,20 @@ public class DavResourceFinder implements Closeable {
 
 				List<WebDavResource> possibleAddressBooks = new LinkedList<>();
 				possibleAddressBooks.add(homeSetAddressBooks);
-				if (homeSetAddressBooks.getMembers() != null)
+				if (homeSetAddressBooks.getMembers() != null) {
 					possibleAddressBooks.addAll(homeSetAddressBooks.getMembers());
+				}
 
 				List<ServerInfo.ResourceInfo> addressBooks = new LinkedList<>();
-				for (WebDavResource resource : possibleAddressBooks)
+				for (WebDavResource resource : possibleAddressBooks) {
 					if (resource.isAddressBook()) {
 						Log.i(TAG, "Found address book: " + resource.getLocation().getPath());
 						ServerInfo.ResourceInfo info = new ServerInfo.ResourceInfo(
-							ServerInfo.ResourceInfo.Type.ADDRESS_BOOK,
-							resource.isReadOnly(),
-							resource.getLocation().toString(),
-							resource.getDisplayName(),
-							resource.getDescription(), resource.getColor()
+								ServerInfo.ResourceInfo.Type.ADDRESS_BOOK,
+								resource.isReadOnly(),
+								resource.getLocation().toString(),
+								resource.getDisplayName(),
+								resource.getDescription(), resource.getColor()
 						);
 
 						VCardVersion version = resource.getVCardVersion();
@@ -98,11 +98,12 @@ public class DavResourceFinder implements Closeable {
 						}
 						info.setVCardVersion(version);
 						addressBooks.add(info);
-
-						}
+					}
+				}
 				serverInfo.setAddressBooks(addressBooks);
-			} else
+			} else {
 				Log.w(TAG, "Found address-book home set, but it doesn't advertise CardDAV support");
+			}
 		}
 
 		// CalDAV
